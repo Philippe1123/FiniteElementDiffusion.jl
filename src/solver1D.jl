@@ -2,11 +2,12 @@ module solver1D
 
 
 
-function main(Elements::Matrix)
+function main(Nodes::Matrix,Elements::Matrix,Param::Dict)
 
-
-
-
+### How to proceed
+#First compute element stiffeness matrices
+#Second Assemble
+#Third solve
 
 end
 
