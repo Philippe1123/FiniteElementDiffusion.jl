@@ -1,0 +1,4 @@
+name = "FiniteElementDiffusion"
+uuid = "79d69272-6d76-47bb-a8fb-de251fbb256b"
+authors = ["Philippe Blondeel <philippe.blondeel@kuleuven.be>"]
+version = "0.1.0"
