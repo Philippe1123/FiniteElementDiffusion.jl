@@ -10,25 +10,29 @@ end
 
 function Main()
 println(@__DIR__)
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_1D_1.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_1D_200.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"Nodes_1D_1.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"Nodes_1D_200.txt"))
 Nodes=Nodes[:,2]#only retain x component
 ElemType="OneD_Order1"
 
 
-#Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_1D_2.txt")))
-#Elements=Elements[:,5:end]
-#Nodes=readdlm(joinpath(locationOfMesh,"Nodes_1D_2.txt"))
-#Nodes=Nodes[:,2]#only retain x component
-#ElemType="OneD_Order2"
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_1D_2_2.txt")))
+Elements=Elements[:,5:end]
+int=Elements[:,2]
+Elements[:,2]=Elements[:,3]
+Elements[:,3]=int
+println(Elements)
+Nodes=readdlm(joinpath(locationOfMesh,"Nodes_1D_2_2.txt"))
+Nodes=Nodes[:,2]#only retain x component
+ElemType="OneD_Order2"
 
 
 NumberOfElements=size(Elements,1)
 MaterialParam=Dict()
 DiffusionCoefficient=10
 
-QuadPoints=3
+QuadPoints=6
 
 for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 

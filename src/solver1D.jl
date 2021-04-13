@@ -12,11 +12,14 @@ for id=1:solverparam.Nelem
     ElemNodes=Elements[id,:]
     PositionNodes=Nodes[ElemNodes,:]
     #println(PositionNodes)
-K_el_Dict[id]=computeElementStiffnessMatrices(solverparam,PositionNodes)
+K_el_Dict[id]=computeElementStiffnessMatrices(solverparam,PositionNodes,ElemNodes)
 end
 PositionMatrix,K_el_vector_form,PositionVector=constructPositionMatrix(Nodes,Elements,solverparam,K_el_Dict)
 ##Second Assemble
 K=assembly(PositionMatrix,K_el_vector_form)
+println(K)
+println(PositionMatrix)
+println(K_el_Dict)
 #K=K./(solverparam.Nelem-1)
 #println(K)
 #Third solve
@@ -25,7 +28,7 @@ K=assembly(PositionMatrix,K_el_vector_form)
 
 forcingterm=vec(ones(length(Nodes),1))
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
-
+println(f)
 #f=vec(ones(size(K,2),1))
 u=K\f
 
@@ -77,11 +80,8 @@ end
 
 
 
-#    println(PositionMatrix)
-#    println(K_el_vector_form)
-println(size(PositionVector))
+
 PositionVector=Int64.(PositionVector)
-println(size(PositionVector))
 return PositionMatrix,K_el_vector_form,PositionVector
 end
 
@@ -89,13 +89,24 @@ end
 function assembly(PositionMatrix::Matrix,K_el_vector_form::Array)
 
 
-#println(size(PositionMatrix))
 #println(size(K_el_vector_form))
 
 K=sparse(PositionMatrix[:,1],PositionMatrix[:,2],K_el_vector_form)
+#K=Matrix(K)
 K=K[2:end-1,2:end-1]
+#first=K[2:end-2,2:end-2]
+#second=K[2:end-2,end]
+#third=K[end,2:end-2]
+#third=transpose(third)
+#fourth=K[end,end]
+#println(size(first))
+#println(size(second))
+#println(size(third))
+#println(size(fourth))
 
-#println(K)
+#K_1=[first second]
+#K_2=[third fourth]
+#K=[K_1;K_2]
 
 return K
 
@@ -103,14 +114,22 @@ end
 
 
 
-function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array)
+function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array)
 
 K_el=zeros(length(Nodes),length(Nodes))
 
 modl=getfield(Main,Symbol(solverparam.elemtype))
 x,H=gauss(solverparam.Qpt)
-for i=1:length(Nodes)
-    for j=1:length(Nodes)
+println(ElemNodes)
+for ii in ElemNodes
+    for jj in ElemNodes
+        #println(ii)
+        #println(jj)
+
+        i=mod(ii-1,solverparam.Order+1)+1
+        j=mod(jj-1,solverparam.Order+1)+1
+        #println(i)
+        #println(j)
 
 for v=1:solverparam.Qpt
 phi,dphi=modl.evaluate(x[v])
@@ -118,6 +137,7 @@ Jac=transpose(Nodes)*dphi
 #println(transpose(Nodes))
 #println(dphi)
 Jac=Jac[1]
+#println(Jac)
 #println(Nodes)
 #println(dphi[1])
 #println(dphi[2])
@@ -155,7 +175,6 @@ function computerighthandside(forcingTerm::Array,solverparam::NamedTuple,Nodes::
 righthandside=vec(zeros(length(Nodes),1))
 
 j=1
-println("len",size(PositionVector,1))
 for id=1:size(PositionVector,1)
 ElemNodes=Elements[PositionVector[id,2],:]
 PositionNodes=Nodes[ElemNodes,:]
@@ -175,6 +194,9 @@ end
 end
 #println(righthandside)
 righthandside=righthandside[2:end-1]
+#first=righthandside[2:end-2]
+#second=righthandside[end]
+#righthandside=[first;second]
 return righthandside
 
 end
