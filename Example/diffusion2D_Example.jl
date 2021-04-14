@@ -15,18 +15,19 @@ println(@__DIR__)
 
 MaterialParam=Dict()
 DiffusionCoefficient=1.0
-QuadPoints=6
+QuadPoints=10
 
 #Order 1
 Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Elements_1.txt")))
 Elements=Elements[:,5:end]
 Nodes=readdlm(joinpath(locationOfMesh,"2D/Nodes_1.txt"))
-Nodes1=Nodes[:,2]#only retain x component
-ElemType="OneD_Order1"
+Nodes1=Nodes[:,2:3]
+
+ElemType="TwoD_Quad_Order1"
 NumberOfElements=size(Elements,1)
 for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
-u1=solver1D.main(Nodes1,Elements,MaterialParam,solverparam)
+u1=solver2D.main(Nodes1,Elements,MaterialParam,solverparam)
 
 
 
