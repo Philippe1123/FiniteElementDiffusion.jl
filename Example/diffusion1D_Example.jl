@@ -1,4 +1,4 @@
-module diffusion
+module diffusion1D_Example
 
 using DelimitedFiles
 using FiniteElementDiffusion
@@ -18,9 +18,9 @@ DiffusionCoefficient=1.0
 QuadPoints=6
 
 #Order 1
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_1.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_1.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"Nodes_1.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_1.txt"))
 Nodes1=Nodes[:,2]#only retain x component
 ElemType="OneD_Order1"
 NumberOfElements=size(Elements,1)
@@ -30,9 +30,9 @@ u1=solver1D.main(Nodes1,Elements,MaterialParam,solverparam)
 
 
 #Order 2
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_2.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_2.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"Nodes_2.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_2.txt"))
 Nodes2=Nodes[:,2]#only retain x component
 ElemType="OneD_Order2"
 NumberOfElements=size(Elements,1)
@@ -42,9 +42,9 @@ u2=solver1D.main(Nodes2,Elements,MaterialParam,solverparam)
 
 
 #Order 3
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"Elements_3.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_3.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"Nodes_3.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_3.txt"))
 Nodes3=Nodes[:,2]#only retain x component
 ElemType="OneD_Order3"
 NumberOfElements=size(Elements,1)
