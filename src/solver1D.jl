@@ -12,14 +12,15 @@ for id=1:solverparam.Nelem
     ElemNodes=Elements[id,:]
     PositionNodes=Nodes[ElemNodes,:]
     #println(PositionNodes)
-K_el_Dict[id]=computeElementStiffnessMatrices(solverparam,PositionNodes,ElemNodes)
+    DiffusionCoefficient=MaterialParam[id]
+K_el_Dict[id]=computeElementStiffnessMatrices(solverparam,PositionNodes,ElemNodes,DiffusionCoefficient)
 end
 PositionMatrix,K_el_vector_form,PositionVector=constructPositionMatrix(Nodes,Elements,solverparam,K_el_Dict)
 ##Second Assemble
 K=assembly(PositionMatrix,K_el_vector_form)
-println(K)
-println(PositionMatrix)
-println(K_el_Dict)
+#println(K)
+#println(PositionMatrix)
+#println(K_el_Dict)
 #K=K./(solverparam.Nelem-1)
 #println(K)
 #Third solve
@@ -28,7 +29,7 @@ println(K_el_Dict)
 
 forcingterm=vec(ones(length(Nodes),1))
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
-println(f)
+#println(f)
 #f=vec(ones(size(K,2),1))
 u=K\f
 
@@ -114,13 +115,13 @@ end
 
 
 
-function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array)
+function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array,D::Float64)
 
 K_el=zeros(length(Nodes),length(Nodes))
 
 modl=getfield(Main,Symbol(solverparam.elemtype))
 x,H=gauss(solverparam.Qpt)
-println(ElemNodes)
+#println(ElemNodes)
 for ii in ElemNodes
     for jj in ElemNodes
         #println(ii)
@@ -158,7 +159,7 @@ function fun(in) return (in*(b-a)/2+(a+b)/2)end
 #println(Jac)
 #println(solverparam.Nelem)
 
-K_el[i,j]=K_el[i,j]+dphi[i]*1/Jac*dphi[j]*1/Jac*H[v]*Jac
+K_el[i,j]=K_el[i,j]+dphi[i]*1/Jac*dphi[j]*1/Jac*H[v]*Jac*D
 end
 #println("-----")
 end
@@ -173,8 +174,10 @@ function computerighthandside(forcingTerm::Array,solverparam::NamedTuple,Nodes::
     modl=getfield(Main,Symbol(solverparam.elemtype))
     x,H=gauss(solverparam.Qpt)
 righthandside=vec(zeros(length(Nodes),1))
+#println("posvector",PositionVector)
 
 j=1
+#println("------------")
 for id=1:size(PositionVector,1)
 ElemNodes=Elements[PositionVector[id,2],:]
 PositionNodes=Nodes[ElemNodes,:]
@@ -184,14 +187,27 @@ PositionNodes=Nodes[ElemNodes,:]
 
 
     Jac=transpose(PositionNodes)*dphi
-righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H[v]*Jac[1]*phi[mod(j-1,solverparam.Order)+1]
+
+righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H[v]*Jac[1]*phi[mod(j-1,solverparam.Order+1)+1]
+#println("posid",PositionVector[id,1])
+#println("phi_new",mod(j-1,solverparam.Order+1)+1)
+#println("phi_old",mod(j-1,solverparam.Order)+1)
+#println("***********")
+
+
+end
+#println("------------")
+
 j=j+1
 
+#println("jac",Jac)
+
+#println("solverorder",solverparam.Order)
+
+
 end
+#println("posvector",PositionVector)
 
-
-
-end
 #println(righthandside)
 righthandside=righthandside[2:end-1]
 #first=righthandside[2:end-2]
