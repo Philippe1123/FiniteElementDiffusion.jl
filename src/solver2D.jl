@@ -20,9 +20,11 @@ PositionMatrix,K_el_vector_form,PositionVector=constructPositionMatrix(Nodes,Ele
 ##Second Assemble
 K=assembly(PositionMatrix,K_el_vector_form)
 println(K)
+#println(Matrix(K))
 
 K=applyBoundaryConditions(K,Nodes)
 println(K)
+#println(Matrix(K))
 #println(PositionMatrix)
 #println(K_el_Dict)
 #K=K./(solverparam.Nelem-1)
@@ -32,14 +34,15 @@ println(K)
 
 
 forcingterm=vec(ones(size(Nodes,1),1))
-println(forcingterm)
+#println(forcingterm)
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
 println(f)
 f=applyBoundaryConditions(f,Nodes)
-
+println(f)
 #f=vec(ones(size(K,2),1))
 u=K\f
 println(u)
+println(maximum(u))
 #return u
 
 end
@@ -121,8 +124,6 @@ for ii in ElemNodes
     j=1
 
     for jj in ElemNodes
-        println("i",i)
-        println("j",j)
 
 
 
@@ -134,7 +135,29 @@ phi,dphi_dξ,dphi_dη=modl.evaluate(x[v],y[w])
 
 JacMat=[transpose(Nodes[:,1])*dphi_dξ transpose(Nodes[:,2])*dphi_dξ;transpose(Nodes[:,1])*dphi_dη transpose(Nodes[:,2])*dphi_dη]
 Jac=det(JacMat)
-#println("Jac",Jac)
+J_inv=zeros(2,2)
+J_inv[1,1]=1/Jac*JacMat[2,2]
+J_inv[1,2]=1/Jac*-JacMat[1,2]
+J_inv[2,1]=1/Jac*-JacMat[2,1]
+J_inv[2,2]=1/Jac*JacMat[1,1]
+
+
+dphi_dx=vec(zeros(length(dphi_dξ),1))
+dphi_dy=vec(zeros(length(dphi_dη),1))
+
+for k=1:length(dphi_dξ)
+#    println(transpose(J_inv[1,:]))
+#    println([dphi_dξ[k];dphi_dη[k]])
+dphi_dx[k]=transpose(J_inv[1,:])*[dphi_dξ[k];dphi_dη[k]]
+dphi_dy[k]=transpose(J_inv[2,:])*[dphi_dξ[k];dphi_dη[k]]
+end
+
+
+
+#println("dphi_dx ",dphi_dx,"dphi_dξ", dphi_dξ)
+#println("dphi_dy ",dphi_dy,"dphi_dη", dphi_dη)
+
+#println("Jac",JacMat)
 #println(transpose(Nodes))
 #println(dphi)
 Jac=Jac[1]
@@ -159,13 +182,16 @@ function fun(in) return (in*(b-a)/2+(a+b)/2)end
 #println(Jac)
 #println(solverparam.Nelem)
 
-println(i," ",j)
-println(dphi_dξ[i]*dphi_dξ[j]*H1[v]*D*H2[w])
-println(dphi_dη[i]*dphi_dη[j]*H1[v]*D*H2[w])
-println(dphi_dξ[i]," ",dphi_dξ[j])
-println(dphi_dη[i]," ",dphi_dη[j])
-K_el[i,j]=K_el[i,j]+dphi_dξ[i]*1/Jac*dphi_dξ[j]*1/Jac*H1[v]*Jac*D*H2[w]+dphi_dη[i]*1/Jac*dphi_dη[j]*1/Jac*H1[v]*Jac*D*H2[w]
-println(1/Jac)
+#println(i," ",j)
+#println(dphi_dξ[i]*dphi_dξ[j]*H1[v]*D*H2[w])
+#println(dphi_dη[i]*dphi_dη[j]*H1[v]*D*H2[w])
+#println(dphi_dξ[i]," ",dphi_dξ[j])
+#println(dphi_dη[i]," ",dphi_dη[j])
+
+K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[v]*Jac*D*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[v]*Jac*D*H2[w]
+#K_el[i,j]=K_el[i,j]+dphi_dξ[i]*dphi_dξ[j]*H1[v]*D*H2[w]+dphi_dη[i]*dphi_dη[j]*H1[v]*D*H2[w]
+
+#println(1/Jac)
 end
 end
 #println("-----")
@@ -176,7 +202,7 @@ end
 
 
 
-#println(K_el)
+println(K_el)
 return K_el
 end
 
@@ -198,10 +224,14 @@ for w=1:solverparam.Qpt
 
         JacMat=[transpose(PositionNodes[:,1])*dphi_dξ transpose(PositionNodes[:,2])*dphi_dξ;transpose(PositionNodes[:,1])*dphi_dη transpose(PositionNodes[:,2])*dphi_dη]
         Jac=det(JacMat)
-        println("Jac",Jac)
 
-righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*Jac[1]*dphi_dξ[mod(j-1,solverparam.Order+1)+1]*H2[w]+forcingTerm[PositionVector[id,1]]*H1[v]*Jac[1]*dphi_dη[mod(j-1,solverparam.Order+1)+1]*H2[w]
+        #println("Jac",Jac)
 
+#righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*Jac[1]*dphi_dξ[mod(j-1,solverparam.Order+1)+1]*H2[w]+forcingTerm[PositionVector[id,1]]*H1[v]*Jac[1]*dphi_dη[mod(j-1,solverparam.Order+1)+1]*H2[w]
+#println(mod(j-1,solverparam.Order+1)+1)
+#println(PositionVector[id,1])
+righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
+println(mod(j-1,solverparam.Order+1)+1)
 
 
 end
@@ -263,7 +293,7 @@ maxy=findall(isequal(maximum(Nodes[:,2])), Nodes[:,2])
 Boundary=[minx;maxx;miny;maxy]
 Boundary=unique(Boundary)
 Boundary=sort(Boundary,rev=true)
-println(Boundary)
+#println(Boundary)
 
 for id=1:length(Boundary)
 f = f[1:end .!= Boundary[id], :]
