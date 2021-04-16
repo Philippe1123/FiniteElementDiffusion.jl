@@ -2,7 +2,7 @@
 
 This package solves a 1D and a 2D diffusion problem.
 
-$`\nabla\dot`$
+∇.⟦D ∇u⟧=f
 
 add package by typing
 ```julia
