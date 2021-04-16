@@ -15,6 +15,8 @@ export OneD_Order1,OneD_Order2,OneD_Order3
 
 export TwoD_Quad_Order1,TwoD_Quad_Order2,TwoD_Quad_Order3
 
+export TwoD_Triag_Order1,TwoD_Triag_Order2
+
 export gridPlot2D,gridPlot1D
 
 export plotNodes,plotElements
@@ -38,6 +40,9 @@ include("OneD_Order3.jl")
 include("TwoD_Quad_Order1.jl")
 include("TwoD_Quad_Order2.jl")
 include("TwoD_Quad_Order3.jl")
+
+include("TwoD_Triag_Order1.jl")
+include("TwoD_Triag_Order2.jl")
 
 include("gridPlot1D.jl")
 include("gridPlot2D.jl")

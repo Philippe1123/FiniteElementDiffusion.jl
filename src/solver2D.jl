@@ -23,23 +23,15 @@ K=assembly(PositionMatrix,K_el_vector_form)
 #println(Matrix(K))
 
 K=applyBoundaryConditions(K,Nodes)
-#println(K)
-#println(Matrix(K))
-#println(PositionMatrix)
-#println(K_el_Dict)
-#K=K./(solverparam.Nelem-1)
-#println(K)
-#Third solve
+
 #println(K_el_Dict)
 
 
 forcingterm=vec(ones(size(Nodes,1),1))
-#println(forcingterm)
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
-#println(f)
 f=applyBoundaryConditions(f,Nodes)
-#println(f)
-#f=vec(ones(size(K,2),1))
+#Third solve
+
 u=K\f
 #println(u)
 #println(maximum(u))
@@ -157,41 +149,17 @@ end
 #println("dphi_dx ",dphi_dx,"dphi_dξ", dphi_dξ)
 #println("dphi_dy ",dphi_dy,"dphi_dη", dphi_dη)
 
-#println("Jac",JacMat)
-#println(transpose(Nodes))
-#println(dphi)
 Jac=Jac[1]
-#println(Jac)
-#println(Nodes)
-#println(dphi[1])
-#println(dphi[2])
-#println(H[v])
-#println(Jac)
-#println(v)
-#println(x[v])
-#println(dphi[i])
-#println(dphi[j])
-#println(H[v])
 
 
 
-a=Nodes[1,1]
-b=Nodes[2,1]
-#println("ok")
+
+#a=Nodes[1,1]
+#b=Nodes[2,1]
 function fun(in) return (in*(b-a)/2+(a+b)/2)end
-#println(Jac)
-#println(solverparam.Nelem)
-
-#println(i," ",j)
-#println(dphi_dξ[i]*dphi_dξ[j]*H1[v]*D*H2[w])
-#println(dphi_dη[i]*dphi_dη[j]*H1[v]*D*H2[w])
-#println(dphi_dξ[i]," ",dphi_dξ[j])
-#println(dphi_dη[i]," ",dphi_dη[j])
 
 K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[v]*Jac*D*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[v]*Jac*D*H2[w]
-#K_el[i,j]=K_el[i,j]+dphi_dξ[i]*dphi_dξ[j]*H1[v]*D*H2[w]+dphi_dη[i]*dphi_dη[j]*H1[v]*D*H2[w]
 
-#println(1/Jac)
 end
 end
 #println("-----")
@@ -226,12 +194,7 @@ for w=1:solverparam.Qpt
         Jac=det(JacMat)
 
         #println("Jac",Jac)
-
-#righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*Jac[1]*dphi_dξ[mod(j-1,solverparam.Order+1)+1]*H2[w]+forcingTerm[PositionVector[id,1]]*H1[v]*Jac[1]*dphi_dη[mod(j-1,solverparam.Order+1)+1]*H2[w]
-#println(mod(j-1,solverparam.Order+1)+1)
-#println(PositionVector[id,1])
 righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
-#println(mod(j-1,solverparam.Order+1)+1)
 
 
 end

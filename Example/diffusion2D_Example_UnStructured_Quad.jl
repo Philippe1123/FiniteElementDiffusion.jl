@@ -67,6 +67,9 @@ for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
 u3=solver2D.main(Nodes3,Elements,MaterialParam,solverparam)
 
+
+
+
 println(maximum(u1))
 println(maximum(u2))
 println(maximum(u3))
