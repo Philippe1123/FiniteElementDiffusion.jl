@@ -13,7 +13,7 @@ export diffusion1D_Example,diffusion2D_Example
 
 export OneD_Order1,OneD_Order2,OneD_Order3
 
-export TwoD_Quad_Order1,TwoD_Quad_Order2
+export TwoD_Quad_Order1,TwoD_Quad_Order2,TwoD_Quad_Order2
 
 include("../Example/diffusion1D_Example.jl")
 include("../Example/diffusion2D_Example.jl")
@@ -27,6 +27,7 @@ include("OneD_Order3.jl")
 
 include("TwoD_Quad_Order1.jl")
 include("TwoD_Quad_Order2.jl")
+include("TwoD_Quad_Order3.jl")
 
 include("../Mesh/readin.jl")
 

@@ -19,11 +19,11 @@ end
 PositionMatrix,K_el_vector_form,PositionVector=constructPositionMatrix(Nodes,Elements,solverparam,K_el_Dict)
 ##Second Assemble
 K=assembly(PositionMatrix,K_el_vector_form)
-println(K)
+#println(K)
 #println(Matrix(K))
 
 K=applyBoundaryConditions(K,Nodes)
-println(K)
+#println(K)
 #println(Matrix(K))
 #println(PositionMatrix)
 #println(K_el_Dict)
@@ -36,14 +36,14 @@ println(K)
 forcingterm=vec(ones(size(Nodes,1),1))
 #println(forcingterm)
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
-println(f)
+#println(f)
 f=applyBoundaryConditions(f,Nodes)
-println(f)
+#println(f)
 #f=vec(ones(size(K,2),1))
 u=K\f
-println(u)
-println(maximum(u))
-#return u
+#println(u)
+#println(maximum(u))
+return u
 
 end
 
@@ -202,7 +202,7 @@ end
 
 
 
-println(K_el)
+#println(K_el)
 return K_el
 end
 
@@ -231,7 +231,7 @@ for w=1:solverparam.Qpt
 #println(mod(j-1,solverparam.Order+1)+1)
 #println(PositionVector[id,1])
 righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
-println(mod(j-1,solverparam.Order+1)+1)
+#println(mod(j-1,solverparam.Order+1)+1)
 
 
 end
@@ -269,7 +269,7 @@ maxy=findall(isequal(maximum(Nodes[:,2])), Nodes[:,2])
 Boundary=[minx;maxx;miny;maxy]
 Boundary=unique(Boundary)
 Boundary=sort(Boundary,rev=true)
-println(Boundary)
+#println(Boundary)
 
 for id=1:length(Boundary)
 K = K[1:end .!= Boundary[id], 1:end .!= Boundary[id]]
