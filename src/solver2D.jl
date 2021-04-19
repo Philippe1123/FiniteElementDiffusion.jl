@@ -131,6 +131,7 @@ for ii in ElemNodes
     for jj in ElemNodes
 
 
+        if(occursin("Quad",solverparam.elemtype,))###########################################################QUAD
 
 for w=1:solverparam.Qpt
 
@@ -175,6 +176,58 @@ K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[v]*Jac*D*H2[w]+dphi_dy[i]*dphi_dy[j
 
 end
 end
+
+
+
+else########################triag
+
+
+    for w=1:solverparam.Qpt
+    phi,dphi_dξ,dphi_dη=modl.evaluate(x[w],y[w])
+
+
+    JacMat=[transpose(Nodes[:,1])*dphi_dξ transpose(Nodes[:,2])*dphi_dξ;transpose(Nodes[:,1])*dphi_dη transpose(Nodes[:,2])*dphi_dη]
+    Jac=det(JacMat)
+    J_inv=zeros(2,2)
+    J_inv[1,1]=1/Jac*JacMat[2,2]
+    J_inv[1,2]=1/Jac*-JacMat[1,2]
+    J_inv[2,1]=1/Jac*-JacMat[2,1]
+    J_inv[2,2]=1/Jac*JacMat[1,1]
+
+
+    dphi_dx=vec(zeros(length(dphi_dξ),1))
+    dphi_dy=vec(zeros(length(dphi_dη),1))
+
+    for k=1:length(dphi_dξ)
+    #    println(transpose(J_inv[1,:]))
+    #    println([dphi_dξ[k];dphi_dη[k]])
+    dphi_dx[k]=transpose(J_inv[1,:])*[dphi_dξ[k];dphi_dη[k]]
+    dphi_dy[k]=transpose(J_inv[2,:])*[dphi_dξ[k];dphi_dη[k]]
+    end
+
+
+
+    #println("dphi_dx ",dphi_dx,"dphi_dξ", dphi_dξ)
+    #println("dphi_dy ",dphi_dy,"dphi_dη", dphi_dη)
+
+    Jac=Jac[1]
+
+
+
+
+    #a=Nodes[1,1]
+    #b=Nodes[2,1]
+    function fun(in) return (in*(b-a)/2+(a+b)/2)end
+
+    K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[w]*Jac*D*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[w]*Jac*D*H2[w]
+
+    end
+
+
+end ##################end
+
+
+
 #println("-----")
 j=j+1
 end
@@ -200,21 +253,19 @@ function computerighthandside(forcingTerm::Array,solverparam::NamedTuple,Nodes::
 #H1=sqrt.(H)
 #H2=sqrt.(H)
 
-#x,y,H1,H2=getCubaturePoints(solverparam.elemtype,solverparam.Qpt)
+x,y,H1,H2=getCubaturePoints(solverparam.elemtype,solverparam.Qpt)
 
-x,y,H1,H2=getCubaturePoints(solverparam.elemtype,1)
+
+if(occursin("Quad",solverparam.elemtype,))###########################################################QUAD
 
 
 righthandside=vec(zeros(size(Nodes,1),1))
-
 j=1
 for id=1:size(PositionVector,1)
 ElemNodes=Elements[PositionVector[id,2],:]
 PositionNodes=Nodes[ElemNodes,:]
-#for w=1:solverparam.Qpt
-#    for v=1:solverparam.Qpt
-        for w=1:1
-            for v=1:1
+for w=1:solverparam.Qpt
+    for v=1:solverparam.Qpt
         phi,dphi_dξ,dphi_dη=modl.evaluate(x[v],y[w])
 
 
@@ -225,18 +276,40 @@ PositionNodes=Nodes[ElemNodes,:]
     #    println(length(ElemNodes))
 #righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
 righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,length(ElemNodes))+1]*H2[w]*Jac[1]
-println(mod(j-1,length(ElemNodes))+1)
-println(mod(j-1,(solverparam.Order+1)^2)+1)
+
 
 end
 end
 j=j+1
-
-
-
 end
 
-#righthandside=righthandside[2:end-1]
+else    ###############################################TRIAG
+
+
+    righthandside=vec(zeros(size(Nodes,1),1))
+    j=1
+    for id=1:size(PositionVector,1)
+    ElemNodes=Elements[PositionVector[id,2],:]
+    PositionNodes=Nodes[ElemNodes,:]
+    for w=1:solverparam.Qpt
+            phi,dphi_dξ,dphi_dη=modl.evaluate(x[w],y[w])
+
+
+            JacMat=[transpose(PositionNodes[:,1])*dphi_dξ transpose(PositionNodes[:,2])*dphi_dξ;transpose(PositionNodes[:,1])*dphi_dη transpose(PositionNodes[:,2])*dphi_dη]
+            Jac=det(JacMat)
+
+            #println("Jac",Jac)
+        #    println(length(ElemNodes))
+    #righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
+    righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[w]*phi[mod(j-1,length(ElemNodes))+1]*H2[w]*Jac[1]
+
+
+    end
+    j=j+1
+    end
+
+end########################################end
+
 
 return righthandside
 

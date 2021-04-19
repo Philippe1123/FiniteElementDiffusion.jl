@@ -23,9 +23,9 @@ Elements=Elements[:,5:end]
 Nodes=readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Nodes_1_42.txt"))
 Nodes1=Nodes[:,2:3]
 
-figure()
-gridPlot2D.plotElements(Elements,Nodes1,"Triag")
-gridPlot2D.plotNodes(Nodes1)
+#figure()
+#gridPlot2D.plotElements(Elements,Nodes1,"Triag")
+#gridPlot2D.plotNodes(Nodes1)
 
 ElemType="TwoD_Triag_Order1"
 NumberOfElements=size(Elements,1)
@@ -41,9 +41,9 @@ Nodes=readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Nodes_2_42.txt"))
 Nodes2=Nodes[:,2:3]
 
 
-figure()
-gridPlot2D.plotElements(Elements,Nodes2,"Triag")
-gridPlot2D.plotNodes(Nodes2)
+#figure()
+#gridPlot2D.plotElements(Elements,Nodes2,"Triag")
+#gridPlot2D.plotNodes(Nodes2)
 
 ElemType="TwoD_Triag_Order2"
 NumberOfElements=size(Elements,1)
@@ -58,9 +58,9 @@ Elements=Elements[:,5:end]
 Nodes=readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Nodes_3_42.txt"))
 Nodes3=Nodes[:,2:3]
 
-figure()
-gridPlot2D.plotElements(Elements,Nodes3,"Triag")
-gridPlot2D.plotNodes(Nodes3)
+#figure()
+#gridPlot2D.plotElements(Elements,Nodes3,"Triag")
+#gridPlot2D.plotNodes(Nodes3)
 
 ElemType="TwoD_Triag_Order3"
 NumberOfElements=size(Elements,1)

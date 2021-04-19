@@ -13,8 +13,8 @@ if(occursin("Triag",typeOfElement))
     out,H=cubature_triangle.evaluate(numberOfCubs)
     x=out[:,1]
     y=out[:,2]
-    H1=sqrt.(H)
-    H2=sqrt.(H)
+    H1=H
+    H2=1.
 
 elseif(occursin("Quad",typeOfElement))
 
