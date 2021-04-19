@@ -33,7 +33,7 @@ for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
 u1=solver2D.main(Nodes1,Elements,MaterialParam,solverparam)
 
-
+####################################################################################3
 #Order 2
 Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Structured/Quad/Elements_2_16.txt")))
 Elements=Elements[:,5:end]
@@ -51,7 +51,17 @@ for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
 u2=solver2D.main(Nodes2,Elements,MaterialParam,solverparam)
 
-#Order 2
+
+ElemType="TwoD_Quad_Numerical_Coeffs_Order2"
+NumberOfElements=size(Elements,1)
+for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
+solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
+u2_bis=solver2D.main(Nodes2,Elements,MaterialParam,solverparam)
+
+
+
+####################################################################################3
+#Order 3
 Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Structured/Quad/Elements_3_16.txt")))
 Elements=Elements[:,5:end]
 Nodes=readdlm(joinpath(locationOfMesh,"2D/Structured/Quad/Nodes_3_16.txt"))
@@ -69,6 +79,8 @@ u3=solver2D.main(Nodes3,Elements,MaterialParam,solverparam)
 
 println(maximum(u1))
 println(maximum(u2))
+println(maximum(u2_bis))
+
 println(maximum(u3))
 
 

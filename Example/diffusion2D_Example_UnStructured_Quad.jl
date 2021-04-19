@@ -15,7 +15,7 @@ println(@__DIR__)
 
 MaterialParam=Dict()
 DiffusionCoefficient=10.0
-QuadPoints=3
+QuadPoints=10
 
 #Order 1
 Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Unstructured/Quad/Elements_1_98.txt")))
@@ -33,7 +33,7 @@ for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
 u1=solver2D.main(Nodes1,Elements,MaterialParam,solverparam)
 
-
+####################################################################################3
 #Order 2
 Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Unstructured/Quad/Elements_2_98.txt")))
 Elements=Elements[:,5:end]
@@ -51,7 +51,8 @@ for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
 u2=solver2D.main(Nodes2,Elements,MaterialParam,solverparam)
 
-#Order 2
+####################################################################################3
+#Order 3
 Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Unstructured/Quad/Elements_3_98.txt")))
 Elements=Elements[:,5:end]
 Nodes=readdlm(joinpath(locationOfMesh,"2D/Unstructured/Quad/Nodes_3_98.txt"))

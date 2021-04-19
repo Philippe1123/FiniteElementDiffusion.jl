@@ -2,9 +2,9 @@ module TwoD_Triag_Order2
 
 
 function evaluate(ξ::Float64,η::Float64)
-    phi=zeros(3,1)
-    dphi_dξ=zeros(3,1)
-    dphi_dη=zeros(3,1)
+    phi=zeros(6,1)
+    dphi_dξ=zeros(6,1)
+    dphi_dη=zeros(6,1)
 
 phi[1]=(1-ξ-η)*(1-2*ξ-2*η)
 phi[2]=-ξ*(1-2*ξ)

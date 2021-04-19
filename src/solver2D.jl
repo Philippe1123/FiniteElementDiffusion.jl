@@ -3,6 +3,7 @@ module solver2D
 using QuadGK
 using SparseArrays
 using LinearAlgebra
+using FiniteElementDiffusion
 
 function main(Nodes::Array,Elements::Matrix,MaterialParam::Dict,solverparam::NamedTuple)
 
@@ -33,6 +34,8 @@ f=applyBoundaryConditions(f,Nodes)
 #Third solve
 
 u=K\f
+
+u=recombine(u,Nodes)
 #println(u)
 #println(maximum(u))
 return u
@@ -107,8 +110,18 @@ function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,El
 K_el=zeros(size(Nodes,1),size(Nodes,1))
 
 modl=getfield(Main,Symbol(solverparam.elemtype))
-x,H1=gauss(solverparam.Qpt)
-y,H2=gauss(solverparam.Qpt)
+
+#x,H1=gauss(solverparam.Qpt)
+#y,H2=gauss(solverparam.Qpt)
+
+#out,H=cubature_triangle.evaluate(6)
+#x=out[:,1]
+#y=out[:,2]
+#H1=sqrt.(H)
+#H2=sqrt.(H)
+
+x,y,H1,H2=getCubaturePoints(solverparam.elemtype,solverparam.Qpt)
+
 
 #println(ElemNodes)
 i=1
@@ -177,16 +190,31 @@ end
 
 function computerighthandside(forcingTerm::Array,solverparam::NamedTuple,Nodes::Array,Elements::Matrix,PositionVector::Matrix)
     modl=getfield(Main,Symbol(solverparam.elemtype))
-    x,H1=gauss(solverparam.Qpt)
-    y,H2=gauss(solverparam.Qpt)
+
+#    x,H1=gauss(solverparam.Qpt)
+#    y,H2=gauss(solverparam.Qpt)
+
+#out,H=cubature_triangle.evaluate(6)
+#x=out[:,1]
+#y=out[:,2]
+#H1=sqrt.(H)
+#H2=sqrt.(H)
+
+#x,y,H1,H2=getCubaturePoints(solverparam.elemtype,solverparam.Qpt)
+
+x,y,H1,H2=getCubaturePoints(solverparam.elemtype,1)
+
+
 righthandside=vec(zeros(size(Nodes,1),1))
 
 j=1
 for id=1:size(PositionVector,1)
 ElemNodes=Elements[PositionVector[id,2],:]
 PositionNodes=Nodes[ElemNodes,:]
-for w=1:solverparam.Qpt
-    for v=1:solverparam.Qpt
+#for w=1:solverparam.Qpt
+#    for v=1:solverparam.Qpt
+        for w=1:1
+            for v=1:1
         phi,dphi_dξ,dphi_dη=modl.evaluate(x[v],y[w])
 
 
@@ -194,8 +222,11 @@ for w=1:solverparam.Qpt
         Jac=det(JacMat)
 
         #println("Jac",Jac)
-righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
-
+    #    println(length(ElemNodes))
+#righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,(solverparam.Order+1)^2)+1]*H2[w]*Jac[1]
+righthandside[PositionVector[id,1]]=righthandside[PositionVector[id,1]]+forcingTerm[PositionVector[id,1]]*H1[v]*phi[mod(j-1,length(ElemNodes))+1]*H2[w]*Jac[1]
+println(mod(j-1,length(ElemNodes))+1)
+println(mod(j-1,(solverparam.Order+1)^2)+1)
 
 end
 end
@@ -263,6 +294,68 @@ f = f[1:end .!= Boundary[id], :]
 end
 
 return f
+end
+
+
+function recombine(u::Array,Nodes::Matrix)
+#Currently only dirichlet conditions at boundaries u(Γ)=0
+u_full=zeros(size(Nodes,1),1)
+u_full=vec(u_full)
+println(size(u_full))
+println(size(u))
+
+minx=minimum(Nodes[:,1])
+maxx=maximum(Nodes[:,1])
+
+miny=minimum(Nodes[:,2])
+maxy=maximum(Nodes[:,2])
+
+Boundary=[minx;maxx;miny;maxy]
+Boundary=unique(Boundary)
+Boundary=sort(Boundary)
+#println(Boundary)
+j=1
+for id=1:size(Nodes,1)
+
+if((Nodes[id,1] in Boundary)||(Nodes[id,2] in Boundary))
+#println(Nodes[id,1]," ",Nodes[id,2])
+u_full[id]=0
+
+else
+u_full[id]=u[j]
+#println(id," ",j)
+j=j+1
+
+
+end
+
+
+end
+
+return u_full
+end
+
+
+
+
+function getCubaturePoints(typeOfElement::String,numberOfCubs::Int64)
+
+if(occursin("Triag",typeOfElement))
+
+    out,H=cubature_triangle.evaluate(numberOfCubs)
+    x=out[:,1]
+    y=out[:,2]
+    H1=sqrt.(H)
+    H2=sqrt.(H)
+
+elseif(occursin("Quad",typeOfElement))
+
+    x,H1=gauss(numberOfCubs)
+    y,H2=gauss(numberOfCubs)
+
+end
+return x,y,H1,H2
+
 end
 
 end
