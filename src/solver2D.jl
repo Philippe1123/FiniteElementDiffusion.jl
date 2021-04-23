@@ -32,7 +32,7 @@ forcingterm=vec(ones(size(Nodes,1),1))
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
 f=applyBoundaryConditions(f,Nodes)
 #Third solve
-
+f=-f
 u=K\f
 
 u=recombine(u,Nodes)
@@ -374,8 +374,8 @@ function recombine(u::Array,Nodes::Matrix)
 #Currently only dirichlet conditions at boundaries u(Γ)=0
 u_full=zeros(size(Nodes,1),1)
 u_full=vec(u_full)
-println(size(u_full))
-println(size(u))
+#println(size(u_full))
+#println(size(u))
 
 minx=minimum(Nodes[:,1])
 maxx=maximum(Nodes[:,1])

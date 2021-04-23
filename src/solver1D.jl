@@ -31,6 +31,7 @@ forcingterm=vec(ones(length(Nodes),1))
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
 #println(f)
 #f=vec(ones(size(K,2),1))
+f=-f
 u=K\f
 
 return u

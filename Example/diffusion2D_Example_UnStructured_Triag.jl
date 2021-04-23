@@ -70,25 +70,27 @@ u3=solver2D.main(Nodes3,Elements,MaterialParam,solverparam)
 
 
 #Order 4
-#Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Elements_4_198.txt")))
-#Elements=Elements[:,5:end]
-#Nodes=readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Nodes_4_198.txt"))
-#Nodes4=Nodes[:,2:3]
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Elements_4_198.txt")))
+Elements=Elements[:,5:end]
+Nodes=readdlm(joinpath(locationOfMesh,"2D/Unstructured/Triag/Nodes_4_198.txt"))
+Nodes4=Nodes[:,2:3]
 
-#figure()
-#gridPlot2D.plotElements(Elements,Nodes4,"Triag")
-#gridPlot2D.plotNodes(Nodes4)
+figure()
+gridPlot2D.plotElements(Elements,Nodes4,"Triag")
+gridPlot2D.plotNodes(Nodes4)
 
-#ElemType="TwoD_Triag_Order4"
-#NumberOfElements=size(Elements,1)
-#for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
-#solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
-#u4=solver2D.main(Nodes4,Elements,MaterialParam,solverparam)
+ElemType="TwoD_Triag_Order4"
+NumberOfElements=size(Elements,1)
+for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
+solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
+u4=solver2D.main(Nodes4,Elements,MaterialParam,solverparam)
 
 
-println(maximum(u1))
-println(maximum(u2))
-println(maximum(u3))
+println(minimum(u1))
+println(minimum(u2))
+println(minimum(u3))
+println(minimum(u4))
+
 println(@__DIR__())
 
 out1=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/1.txt"),"w")
@@ -102,6 +104,10 @@ out1=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/1.txt"),"w")
   out3=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/3.txt"),"w")
    writedlm(out3,[Nodes3 u3])
    close(out3)
+
+   out4=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/4.txt"),"w")
+    writedlm(out4,[Nodes4 u4])
+    close(out4)
 #println(maximum(u4))
 
 #println(size(Nodes1))
@@ -115,6 +121,15 @@ out1=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/1.txt"),"w")
 #println(pt3)
 
 #figure()
+
+figure()
+surf(Nodes1[:,1],Nodes1[:,2],u1)
+figure()
+surf(Nodes2[:,1],Nodes2[:,2],u2)
+figure()
+surf(Nodes3[:,1],Nodes3[:,2],u3)
+figure()
+surf(Nodes4[:,1],Nodes4[:,2],u4)
 
 
 
