@@ -13,6 +13,8 @@ export diffusion1D_Example,diffusion2D_Example_Structured_Quad,diffusion2D_Examp
 
 export OneD_Order1,OneD_Order2,OneD_Order3,OneD_Order4
 
+export Hierarchical_OneD_Order2,Hierarchical_OneD_Order3
+
 export TwoD_Quad_Order1,TwoD_Quad_Order2,TwoD_Quad_Order3
 
 export TwoD_Quad_Numerical_Coeffs_Order2
@@ -38,6 +40,9 @@ include("solver2D.jl")
 
 include("OneD_Order1.jl")
 include("OneD_Order2.jl")
+include("Hierarchical_OneD_Order2.jl")
+include("Hierarchical_OneD_Order3.jl")
+
 include("OneD_Order3.jl")
 include("OneD_Order4.jl")
 

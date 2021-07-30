@@ -431,4 +431,143 @@ return x,y,H1,H2
 
 end
 
+
+
+function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array,D::Array)
+
+K_el=zeros(size(Nodes,1),size(Nodes,1))
+
+modl=getfield(Main,Symbol(solverparam.elemtype))
+
+#x,H1=gauss(solverparam.Qpt)
+#y,H2=gauss(solverparam.Qpt)
+
+#out,H=cubature_triangle.evaluate(6)
+#x=out[:,1]
+#y=out[:,2]
+#H1=sqrt.(H)
+#H2=sqrt.(H)
+
+x,y,H1,H2=getCubaturePoints(solverparam.elemtype,solverparam.Qpt)
+
+
+#println(ElemNodes)
+i=1
+for ii in ElemNodes
+    j=1
+
+    for jj in ElemNodes
+
+
+        if(occursin("Quad",solverparam.elemtype,))###########################################################QUAD
+countD=1
+for w=1:solverparam.Qpt
+
+for v=1:solverparam.Qpt
+phi,dphi_dξ,dphi_dη=modl.evaluate(x[v],y[w])
+
+
+JacMat=[transpose(Nodes[:,1])*dphi_dξ transpose(Nodes[:,2])*dphi_dξ;transpose(Nodes[:,1])*dphi_dη transpose(Nodes[:,2])*dphi_dη]
+Jac=det(JacMat)
+J_inv=zeros(2,2)
+J_inv[1,1]=1/Jac*JacMat[2,2]
+J_inv[1,2]=1/Jac*-JacMat[1,2]
+J_inv[2,1]=1/Jac*-JacMat[2,1]
+J_inv[2,2]=1/Jac*JacMat[1,1]
+
+
+dphi_dx=vec(zeros(length(dphi_dξ),1))
+dphi_dy=vec(zeros(length(dphi_dη),1))
+
+for k=1:length(dphi_dξ)
+#    println(transpose(J_inv[1,:]))
+#    println([dphi_dξ[k];dphi_dη[k]])
+dphi_dx[k]=transpose(J_inv[1,:])*[dphi_dξ[k];dphi_dη[k]]
+dphi_dy[k]=transpose(J_inv[2,:])*[dphi_dξ[k];dphi_dη[k]]
+end
+
+
+
+#println("dphi_dx ",dphi_dx,"dphi_dξ", dphi_dξ)
+#println("dphi_dy ",dphi_dy,"dphi_dη", dphi_dη)
+
+Jac=Jac[1]
+
+
+
+
+#a=Nodes[1,1]
+#b=Nodes[2,1]
+function fun(in) return (in*(b-a)/2+(a+b)/2)end
+
+K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[v]*Jac*D[countD]*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[v]*Jac*D[countD]*H2[w]
+countD=countD+1
+end
+end
+
+
+
+else########################triag
+
+    countD=1
+    for w=1:solverparam.Qpt
+    phi,dphi_dξ,dphi_dη=modl.evaluate(x[w],y[w])
+
+
+    JacMat=[transpose(Nodes[:,1])*dphi_dξ transpose(Nodes[:,2])*dphi_dξ;transpose(Nodes[:,1])*dphi_dη transpose(Nodes[:,2])*dphi_dη]
+    Jac=det(JacMat)
+    J_inv=zeros(2,2)
+    J_inv[1,1]=1/Jac*JacMat[2,2]
+    J_inv[1,2]=1/Jac*-JacMat[1,2]
+    J_inv[2,1]=1/Jac*-JacMat[2,1]
+    J_inv[2,2]=1/Jac*JacMat[1,1]
+
+
+    dphi_dx=vec(zeros(length(dphi_dξ),1))
+    dphi_dy=vec(zeros(length(dphi_dη),1))
+
+    for k=1:length(dphi_dξ)
+    #    println(transpose(J_inv[1,:]))
+    #    println([dphi_dξ[k];dphi_dη[k]])
+    dphi_dx[k]=transpose(J_inv[1,:])*[dphi_dξ[k];dphi_dη[k]]
+    dphi_dy[k]=transpose(J_inv[2,:])*[dphi_dξ[k];dphi_dη[k]]
+    end
+
+
+
+    #println("dphi_dx ",dphi_dx,"dphi_dξ", dphi_dξ)
+    #println("dphi_dy ",dphi_dy,"dphi_dη", dphi_dη)
+
+    Jac=Jac[1]
+
+
+
+
+    #a=Nodes[1,1]
+    #b=Nodes[2,1]
+    function fun(in) return (in*(b-a)/2+(a+b)/2)end
+
+    K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[w]*Jac*D[countD]*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[w]*Jac*D[countD]*H2[w]
+countD=countD+1
+    end
+
+
+end ##################end
+
+
+
+#println("-----")
+j=j+1
+end
+i=i+1
+end
+
+
+
+#println(K_el)
+return K_el
+end
+
+
+
 end
