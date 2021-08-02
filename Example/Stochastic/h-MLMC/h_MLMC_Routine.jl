@@ -1,5 +1,5 @@
 
-module h-MLMC_Routine
+module h_MLMC_Routine
 
 using DelimitedFiles
 using FiniteElementDiffusion
@@ -7,6 +7,11 @@ using PyPlot
 using GaussianRandomFields
 using ScatteredInterpolation
 using Statistics
+using MultilevelEstimators
+using  Random
+using Dates
+using LatticeRules
+using DigitalNets
 
 
 macro get_arg(key_name, default_value)
@@ -40,13 +45,17 @@ nb_of_warm_up_samples=2
 max_index_set_param=11 #8
 numberoftol=60
 NQoI=1
-sample_method=QMC()
-MaxLevel=6
-
+is_qmc=true
+MaxLevel=4
+nterms=400
+corr_len=0.3
+smoothness=4.0
+is_analyse=false
 index_set=ML()
 isHigerOrderRefinement=false
 isElementRefinement=true
 correlateOnlyDiffs=false
+is_multiple_qoi=false
 ###############
 
 
@@ -257,7 +266,11 @@ Nodes=Dict()
 	end
 
 
-
+	if is_qmc
+	  sample_method=QMC()
+	else
+		sample_method=MC()
+	end
 
 
 
@@ -267,9 +280,7 @@ Nodes=Dict()
 	name = isa(index_set,ML) ? string(name,"ML") : MultilevelEstimators.ndims(index_set) > 1 ? string(name,"MI") : name
 	name = is_qmc ? string(name,"Q") : name
 	name = string(name,"MC")
-	name = isField ? string(name,"_Het") : string(name,"_Hom")
 	name = isHigerOrderRefinement ? string(name,"_High") : string(name,"_Ref")
-	name = GaussPoints ? string(name,"_GP") :
 	name = is_multiple_qoi ? string(name," (multiple)") : name
 	name = string(name,"_")
 	timenow = Dates.now()
@@ -280,9 +291,21 @@ Nodes=Dict()
 	isa(index_set,SL) ? println("All samples taken on level ", max_level) : println()
 
 
-    folder=string(string(@__DIR__(),"/Test")
+
+
+	folder=string(@__DIR__(),"/",name)
+
+
+	    if(isdir(folder)==false)
+	    mkdir(folder)
+	    else
+	        rm(folder,recursive=true)
+	        mkdir(folder)
+	    end
+
+
    #ptgen=DigitalNet64_2(dim) # changed to sobol3
-   ptgen=DigitalNet32(dim) # changed to sobol3
+   ptgen=DigitalNet32(nterms) # changed to sobol3
 
 
    estimator=MultilevelEstimators.Estimator(
@@ -308,7 +331,7 @@ Nodes=Dict()
 
 
    #history = run(estimator,2.0e-5)
-   history = run(estimator,2.0e-6)
+   #history = run(estimator,2.0e-6)
 
 
 end
@@ -317,7 +340,7 @@ end
 
 
 
-function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,folder::String,folder_with_elements::String,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool)
+function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool)
 
 	StepChange=0
 	if(length(increment)==length(index))
@@ -329,7 +352,7 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 	Zf = GaussianRandomFields.sample(grf[index],xi=ξ) # compute GRF
 	Zf=expfield(Zf)
 
-    Qf = RESULT!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    Qf = TODO
 
     dQ = Qf
 	if(increment==0)
