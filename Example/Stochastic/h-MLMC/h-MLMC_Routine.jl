@@ -43,12 +43,15 @@ NQoI=1
 sample_method=QMC()
 MaxLevel=6
 
-
-
+index_set=ML()
+isHigerOrderRefinement=false
+isElementRefinement=true
+correlateOnlyDiffs=false
 ###############
 
 
-folderOfMeshes=string(@__DIR__(),"/Meshes")
+folder_with_elements=string(@__DIR__())
+indices = get_max_index_set(index_set, MaxLevel)
 
 
 
@@ -57,8 +60,6 @@ folderOfMeshes=string(@__DIR__(),"/Meshes")
 
 Elements=Dict()
 Nodes=Dict()
-
-
 	if(isa(index_set,SL)||isa(index_set,ML))
 
   		if(isHigerOrderRefinement==false)
@@ -89,159 +90,174 @@ Nodes=Dict()
 		Positions[id]=IntermPositions
 	end
 
-
 	for id in indices
 		SizeId=length(id)
 		Access="_";
 			for i=1:SizeId
 				Access=string(Access,id[i])
 			end
-
-	   NumberOfDicEntries[id]=0
+		NumberOfDicEntries[id]=0
 	#%%%% written only for MLMC
-	    if(correlateOnlyDiffs==true)
-	    NumberOfDicEntries[id]=NumberOfDicEntries[id]+1
-
-	    Access_test=string("_",id,"_M",id,'_',"S",id)
-
-
-	    LevelDict[id][id]=Access_test
-
-	      for (key,value) in diff(id)
+		if(correlateOnlyDiffs==true)
+			NumberOfDicEntries[id]=NumberOfDicEntries[id]+1
+			Access_test=string("_",id,"_M",id,'_',"S",id)
+			 LevelDict[id][id]=Access_test
+			 for (key,value) in diff(id)
 	      #IntermLevelDict=LevelDict[key]
 	            #   println(IntermLevelDict)
+				NumberOfDicEntries[key]=NumberOfDicEntries[key]+1
+				Access_test=string("_",key,"_M",id,'_',"S",key)
+				LevelDict[key][id]=Access_test
+			end
+		end
+
+
+		PathElement=string(string(folder_with_elements,string("/",type,"_refinement/Elements_L",Access)),".txt")
+		Handle_Elements=open(PathElement)
+		Element=readdlm(Handle_Elements,Int);
+ 		Element=Element[:,5:7]
+ 		Elements[id]=Element
 
 
 
-	      NumberOfDicEntries[key]=NumberOfDicEntries[key]+1
-	      Access_test=string("_",key,"_M",id,'_',"S",key)
-	      LevelDict[key][id]=Access_test
-	      end
-
-
-
-
-	    end
-
-
-
-   PathElement=string(string(folder_with_elements,string("/",type,"_refinement/Elements_L",Access)),".txt")
-   Handle_Elements=open(PathElement)
-   Element=readdlm(Handle_Elements,Int);
-   Element=Element[:,5:7]
-   Elements[id]=Element
-
-
-
-   if((isa(index_set,SL)||isa(index_set,ML))&&isHigerOrderRefinement==false)
-   PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/Nodes_L",Access)),".txt")
-   PathElementCenters=string(string(folder_with_elements,string("/",type,"_refinement/ElementsCenter_L",Access)),".txt")
-   Handle_PathElementCenters=open(PathElementCenters,"w")
-   Handle_Nodes=open(PathNodes)
-   Node=readdlm(Handle_Nodes);
-   Node=Node[:,2:3]
-   Nodes[id]=Node
-   Center=compute_centers(Node,Element)
-   Centers[id]=Center
+		if((isa(index_set,SL)||isa(index_set,ML))&&isHigerOrderRefinement==false)
+			PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/Nodes_L",Access)),".txt")
+			PathElementCenters=string(string(folder_with_elements,string("/",type,"_refinement/ElementsCenter_L",Access)),".txt")
+			Handle_PathElementCenters=open(PathElementCenters,"w")
+ 			Handle_Nodes=open(PathNodes)
+ 			Node=readdlm(Handle_Nodes);
+			Node=Node[:,2:3]
+			Nodes[id]=Node
+			Center=compute_centers(Node,Element)
+			Centers[id]=Center
    #Nodes[id]=[Centers[id];Nodes[id]] ###############################################################################################use centers to generate
-   writedlm(Handle_PathElementCenters,Center)
-   close(Handle_PathElementCenters)
-   close(Handle_Nodes)
-   println("h-ref")
-   else
-	 PathNodes_elements=string(string(folder_with_elements,string("/",type,"_refinement/Nodes_L",Access)),".txt")
-	 Nodes_elements=readdlm(PathNodes_elements);
-	 Nodes_elements=Nodes_elements[:,2:3]
+			writedlm(Handle_PathElementCenters,Center)
+			close(Handle_PathElementCenters)
+			close(Handle_Nodes)
+			println("h-ref")
+		else
+			PathNodes_elements=string(string(folder_with_elements,string("/",type,"_refinement/Nodes_L",Access)),".txt")
+			Nodes_elements=readdlm(PathNodes_elements);
+			Nodes_elements=Nodes_elements[:,2:3]
 
+			if(correlateOnlyDiffs==false)
+				PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",Access)),".txt")
+				Handle_Nodes=open(PathNodes)
+				Node=readdlm(Handle_Nodes);
+				close(Handle_Nodes)
+				Node=Node[:,2:3]
+				Nodes[id]=Node
+			end
+			println("p-ref and hp-ref")
+		end
+		close(Handle_Elements)
+	end
 
-	   if(correlateOnlyDiffs==false)
-
-		 PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",Access)),".txt")
-		 Handle_Nodes=open(PathNodes)
-		 Node=readdlm(Handle_Nodes);
-		 close(Handle_Nodes)
-		 Node=Node[:,2:3]
-	 #Nodes[id]=[Node;Nodes_elements]############update
-		 Nodes[id]=Node
-
-	   end
-
-
-
-
-	 println("p-ref and hp-ref")
-
-
-
-
-   end
-
-
-   close(Handle_Elements)
-
-   end
-
-   if(correlateOnlyDiffs==true)
-	 Nodes=Dict()
-
-	 for id in indices
-	   Node_Dict=Dict()
-	   Nodes[id]=Node_Dict=Dict()
-	 end
-
-
-	 for id in indices
-
-	   PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",LevelDict[id][id])),".txt")
-	   Handle_Nodes=open(PathNodes)
-	   Node=readdlm(Handle_Nodes);
-	   close(Handle_Nodes)
-	   Node=Node[:,2:3]
-	   Nodes[id][id]=Node
-
-
-	   for (key,value) in diff(id)
-	  PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",LevelDict[key][id])),".txt")
-	  Handle_Nodes=open(PathNodes)
-	  Node=readdlm(Handle_Nodes);
-	  close(Handle_Nodes)
-	  Node=Node[:,2:3]
-	  Nodes[key][id]=Node
-
-
-   end
-	 end
-   end
+	if(correlateOnlyDiffs==true)
+		Nodes=Dict()
+		for id in indices
+			Node_Dict=Dict()
+			Nodes[id]=Node_Dict=Dict()
+		end
+		for id in indices
+			PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",LevelDict[id][id])),".txt")
+			Handle_Nodes=open(PathNodes)
+			Node=readdlm(Handle_Nodes);
+			close(Handle_Nodes)
+			Node=Node[:,2:3]
+			Nodes[id][id]=Node
+			for (key,value) in diff(id)
+				PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",LevelDict[key][id])),".txt")
+				Handle_Nodes=open(PathNodes)
+				Node=readdlm(Handle_Nodes);
+				close(Handle_Nodes)
+				Node=Node[:,2:3]
+				Nodes[key][id]=Node
+ 			end
+		end
+	end
 
 
 
+	distributions = [MultilevelEstimators.TruncatedNormal(0,1,-2,2) for i in 1:nterms]
+	println(distributions[1])
+	p=2
+	exp_field = GaussianRandomFields.Matern(corr_len,smoothness,σ=1.0,p=p)
+
+	println("P of covar equals")
+	println(p)
+	cov = CovarianceFunction(2,exp_field)
+
+
+         # all other levels
+	grfs=Dict()
+	if(correlateOnlyDiffs==false)
+		for index in indices
+			println(index)
+			Random.seed!(1234)
+			grfs[index] = GaussianRandomField(cov,KarhunenLoeve(nterms),Nodes[index],Elements[index],quad=GaussLegendre())
+			println(grfs[index])
+		end
+
+
+		for index in indices
+			if(index>Level(0))
+				index_1=index[1]-1
+				index_1=Level(index_1)
+				println(index)
+
+				if(grfs[index].data.eigenfunc[1,1]==grfs[index_1].data.eigenfunc[1,1])
+					println("Level ", index," and Level ",index_1, "same eigenfunc")
+  #                Random.seed!(7328)
+    #              println(GaussianRandomFields.sample(grfs[index])[13])
+ 				else
+					println("Warning: Level ", index," and Level ",index_1, "DIFFERENT eigenfunc")
+				end
+			end
+		end
+	else
+		for id in indices
+			grfs_Dict=Dict()
+			grfs[id]=grfs_Dict
+		end
+		for index in indices
+			println(string("Master Field for Level: ",index))
+			Random.seed!(1234)
+			grfs[index][index]=GaussianRandomField(cov,KarhunenLoeve(nterms),Nodes[index][index],Elements[index],quad=GaussLegendre(),eigensolver=EigenSolver())
+			Random.seed!(1234)
+			println(grfs[index][index])
+			for (key,value) in diff(index)
+				println(string("Slave Fields for Level: ",index))
+          #    println(Nodes)
+		  		Random.seed!(1234)
+				grfs[key][index] = GaussianRandomField(cov,KarhunenLoeve(nterms),Nodes[key][index],Elements[index],quad=GaussLegendre(),eigensolver=EigenSolver())
+				Random.seed!(1234)
+#              println("here")
+				println(grfs[key][index])
+				if(grfs[key][index].data.eigenfunc[1,1]==grfs[index][index].data.eigenfunc[1,1])
+					println("Eigenfunctions Matching")
+				else
+					println("WARNING: Eigenfunctions Not Matching, Program will switch to interpolate")
+
+				end
+
+			end
+			println("---------------------------------------------")
+
+		end
+
+	end
+	println(grfs)
+
+
+	if(isa(index_set,SL))
+		increment = max_level
+	else
+		increment=0
+	end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    index_set=ML()
-	indices = get_max_index_set(index_set, MaxLevel)
-	distributions = [MultilevelEstimators.Uniform() for i in 1:dim]
-
-
-for id in indices
-
-
-
-end
 
 
 
