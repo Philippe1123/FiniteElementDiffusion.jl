@@ -261,12 +261,25 @@ Nodes=Dict()
 
 
 
+	name = "Diffusion2D "
+	name = is_analyse ? string(name,"analyse ") : name
+	name = isa(index_set,AD) ? string(name,"A") : name
+	name = isa(index_set,ML) ? string(name,"ML") : MultilevelEstimators.ndims(index_set) > 1 ? string(name,"MI") : name
+	name = is_qmc ? string(name,"Q") : name
+	name = string(name,"MC")
+	name = isField ? string(name,"_Het") : string(name,"_Hom")
+	name = isHigerOrderRefinement ? string(name,"_High") : string(name,"_Ref")
+	name = GaussPoints ? string(name,"_GP") :
+	name = is_multiple_qoi ? string(name," (multiple)") : name
+	name = string(name,"_")
+	timenow = Dates.now()
+	timenow = Dates.format(timenow, "dd-mm-yyyy-T:HH:MM:SS")
+	name = string(name,timenow)
+	#nb_of_qoi = is_multiple_qoi ? Int(Lx/he*2^(max_level-1)+1) : 1
+	sample_function = correlateOnlyDiffs ? (index, ξ) -> Diffusion_cslo(index, ξ, grfs,Nodes,Elements,MatlabSampler,folder_Interm,folder_with_elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs,LevelDict) : (index, ξ) -> Diffusion(index, ξ, grfs,Nodes,Elements,MatlabSampler,folder_Interm,folder_with_elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs)
+	isa(index_set,SL) ? println("All samples taken on level ", max_level) : println()
 
 
-
-
-	sample_function = (index,ξ)->Sample_mapping(index, ξ, grf,mapping,pts)
-    name="test"
     folder=string(string(@__DIR__(),"/Test")
    #ptgen=DigitalNet64_2(dim) # changed to sobol3
    ptgen=DigitalNet32(dim) # changed to sobol3
@@ -304,65 +317,51 @@ end
 
 
 
-function Sample_mapping(index::Index, ξ::Vector{T} where {T<:Real},grf::GaussianRandomField,mapping::Dict,pts::Array)
+function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,folder::String,folder_with_elements::String,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool)
 
+	StepChange=0
+	if(length(increment)==length(index))
+		index=index+Level(increment)
+	end
 
+	Nodes_Fine=Nodes[index]
+	Elements_Fine=Elements[index]
+	Zf = GaussianRandomFields.sample(grf[index],xi=ξ) # compute GRF
+	Zf=expfield(Zf)
 
-
-     ω=map(mapping[index],ξ)
-     Zf = exp.(GaussianRandomFields.sample(grf,xi=ω[1:randdim(grf)])) # compute GRF
-     Zf=vec(Zf)
-     b=abs.(pts.^2/2-pts/2)
-	 u1=b.*Zf.^(-1)
-	 Qf = maximum(u1)
-
-    dQ = Qf
-    for (key,value) in diff(index)
-		ω=map(mapping[key],ξ)
-        Zc = exp.(GaussianRandomFields.sample(grf,xi=ω[1:randdim(grf)])) # compute GRF
-        Zc=vec(Zc)
-        b=abs.(pts.^2/2-pts/2)
-   	    u1=b.*Zc.^(-1)
-		Qc = maximum(u1)
-        dQ += value*Qc
-    end
-
-
-return (dQ,Qf)
-
-
-
-end
-
-function Sample_field(index::Index, ξ::Vector{T} where {T<:Real},grfs::Dict,mapping::Function,pts::Array)
-
-
-
-
-     ω=map(mapping,ξ)
-     Zf = exp.(GaussianRandomFields.sample(grfs[index],xi=ω[1:randdim(grfs[index])])) # compute GRF
-     Zf=vec(Zf)
-     b=abs.(pts.^2/2-pts/2)
-	 u1=b.*Zf.^(-1)
-	 Qf = maximum(u1)
+    Qf = RESULT!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     dQ = Qf
-    for (key,value) in diff(index)
-		ω=map(mapping,ξ)
-        Zc = exp.(GaussianRandomFields.sample(grfs[key],xi=ω[1:randdim(grfs[key])])) # compute GRF
-        Zc=vec(Zc)
-        b=abs.(pts.^2/2-pts/2)
-   	    u1=b.*Zc.^(-1)
-		Qc = maximum(u1)
-        dQ += value*Qc
-    end
+	if(increment==0)
+		for (key,value) in diff(index)
+
+			index_1=key
+			Nodes_Coarse=Nodes[index_1]
+			Elements_Coarse=Elements[index_1]
+#        itp = ScatteredInterpolation.interpolate(NearestNeighbor(), Nodes_Fine', Zf);
+#        Zc=evaluate(itp, Nodes_Coarse')
+#        Zc=vec(Zc)
+			if(grf[index_1].data.eigenfunc[1,1]==grf[index].data.eigenfunc[1,1])
+				Zc=GaussianRandomFields.sample(grf[index_1],xi=ξ)
+				Zc=expfield(Zc)
+			else
+				itp = ScatteredInterpolation.interpolate(NearestNeighbor(), Nodes_Fine', Zf);
+				Zc=evaluate(itp, Nodes_Coarse')
+				Zc=vec(Zc)
+			end
+
+			Qc = Slope_Sample(Zc,MatlabSampler,folder,index_1,true,isHigerOrderRefinement,isElementRefinement,StepChange)
 
 
-return (dQ,Qf)
-
-
-
+			dQ += value*Qc
+  #      println(float(Qf)," break ",float(Qc)," break ",float(dQ)," break ",value)
+		end
+	end
+	return (dQ,Qf)
 end
+
+
+
 
 
 
