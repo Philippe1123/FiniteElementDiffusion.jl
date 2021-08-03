@@ -1,5 +1,5 @@
 
-module h_MLMC_Routine
+module h_MLQMC_Routine
 
 using DelimitedFiles
 using FiniteElementDiffusion
@@ -45,7 +45,7 @@ nb_of_warm_up_samples=2
 max_index_set_param=11 #8
 numberoftol=60
 NQoI=1
-is_qmc=false
+is_qmc=true
 MaxLevel=2
 nterms=400
 corr_len=0.3
@@ -304,7 +304,7 @@ Nodes=Dict()
 
 
    #ptgen=DigitalNet64_2(dim) # changed to sobol3
-   #ptgen=DigitalNet32(nterms) # changed to sobol3
+   ptgen=DigitalNet32(nterms) #
 
 
    estimator=MultilevelEstimators.Estimator(
@@ -317,14 +317,14 @@ Nodes=Dict()
    do_mse_splitting=true,
  #  min_splitting=0.01,
 #   max_splitting=0.1,
-   #nb_of_shifts=nshifts,
+   nb_of_shifts=nshifts,
    nb_of_warm_up_samples=nb_of_warm_up_samples,
    max_index_set_param=max_index_set_param,
    continuate=true,
    nb_of_tols=numberoftol,
    nb_of_qoi = NQoI, # number of qoi
-   #point_generator=ptgen,
-   #sample_mul_factor=2.0,
+   point_generator=ptgen,
+   sample_mul_factor=2.0,
    )
 
 
