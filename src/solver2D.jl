@@ -233,10 +233,80 @@ j=j+1
 end
 i=i+1
 end
-
-
-
 #println(K_el)
+return K_el
+end
+
+
+function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array,D::Array)
+
+K_el=zeros(size(Nodes,1),size(Nodes,1))
+modl=getfield(Main,Symbol(solverparam.elemtype))
+
+x,y,H1,H2=getCubaturePoints(solverparam.elemtype,solverparam.Qpt)
+
+i=1
+for ii in ElemNodes
+    j=1
+    for jj in ElemNodes
+        if(occursin("Quad",solverparam.elemtype,))###########################################################QUAD
+            itr=1
+            for w=1:solverparam.Qpt
+                for v=1:solverparam.Qpt
+                    phi,dphi_dξ,dphi_dη=modl.evaluate(x[v],y[w])
+                    JacMat=[transpose(Nodes[:,1])*dphi_dξ transpose(Nodes[:,2])*dphi_dξ;transpose(Nodes[:,1])*dphi_dη transpose(Nodes[:,2])*dphi_dη]
+                    Jac=det(JacMat)
+                    J_inv=zeros(2,2)
+                    J_inv[1,1]=1/Jac*JacMat[2,2]
+                    J_inv[1,2]=1/Jac*-JacMat[1,2]
+                    J_inv[2,1]=1/Jac*-JacMat[2,1]
+                    J_inv[2,2]=1/Jac*JacMat[1,1]
+                    dphi_dx=vec(zeros(length(dphi_dξ),1))
+                    dphi_dy=vec(zeros(length(dphi_dη),1))
+                    for k=1:length(dphi_dξ)
+                        dphi_dx[k]=transpose(J_inv[1,:])*[dphi_dξ[k];dphi_dη[k]]
+                        dphi_dy[k]=transpose(J_inv[2,:])*[dphi_dξ[k];dphi_dη[k]]
+                    end
+                    Jac=Jac[1]
+
+                    function fun(in) return (in*(b-a)/2+(a+b)/2)end
+
+                    K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[v]*Jac*D[itr]*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[v]*Jac*D[itr]*H2[w]
+
+                end
+            end
+        else########################triag
+            itr=1
+            for w=1:solverparam.Qpt
+
+                phi,dphi_dξ,dphi_dη=modl.evaluate(x[w],y[w])
+                JacMat=[transpose(Nodes[:,1])*dphi_dξ transpose(Nodes[:,2])*dphi_dξ;transpose(Nodes[:,1])*dphi_dη transpose(Nodes[:,2])*dphi_dη]
+                Jac=det(JacMat)
+                J_inv=zeros(2,2)
+                J_inv[1,1]=1/Jac*JacMat[2,2]
+                J_inv[1,2]=1/Jac*-JacMat[1,2]
+                J_inv[2,1]=1/Jac*-JacMat[2,1]
+                J_inv[2,2]=1/Jac*JacMat[1,1]
+                dphi_dx=vec(zeros(length(dphi_dξ),1))
+                dphi_dy=vec(zeros(length(dphi_dη),1))
+
+                for k=1:length(dphi_dξ)
+                    dphi_dx[k]=transpose(J_inv[1,:])*[dphi_dξ[k];dphi_dη[k]]
+                    dphi_dy[k]=transpose(J_inv[2,:])*[dphi_dξ[k];dphi_dη[k]]
+                end
+                Jac=Jac[1]
+
+                function fun(in) return (in*(b-a)/2+(a+b)/2)end
+
+                K_el[i,j]=K_el[i,j]+dphi_dx[i]*dphi_dx[j]*H1[w]*Jac*D[itr]*H2[w]+dphi_dy[i]*dphi_dy[j]*H1[w]*Jac*D[itr]*H2[w]
+
+            end
+        end ##################end
+        j=j+1
+        itr=itr+1
+    end
+    i=i+1
+end
 return K_el
 end
 
@@ -433,7 +503,7 @@ end
 
 
 
-function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array,D::Array)
+function computeElementStiffnessMatrices_old(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array,D::Array)
 
 K_el=zeros(size(Nodes,1),size(Nodes,1))
 

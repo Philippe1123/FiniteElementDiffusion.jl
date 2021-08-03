@@ -1,5 +1,5 @@
 
-module h_MLQMC_Routine
+module p_MLQMC_NNA_Routine
 
 using DelimitedFiles
 using FiniteElementDiffusion
@@ -52,8 +52,8 @@ corr_len=0.3
 smoothness=4.0
 is_analyse=false
 index_set=ML()
-isHigerOrderRefinement=false
-isElementRefinement=true
+isHigerOrderRefinement=true
+isElementRefinement=false
 correlateOnlyDiffs=false
 is_multiple_qoi=false
 ###############
@@ -150,7 +150,7 @@ Nodes=Dict()
 			Nodes_elements=Nodes_elements[:,2:3]
 
 			if(correlateOnlyDiffs==false)
-				PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",Access)),".txt")
+				PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_NN_L",Access)),".txt")
 				Handle_Nodes=open(PathNodes)
 				Node=readdlm(Handle_Nodes);
 				close(Handle_Nodes)

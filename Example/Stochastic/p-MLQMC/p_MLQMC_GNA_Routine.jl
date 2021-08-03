@@ -1,5 +1,5 @@
 
-module h_MLQMC_Routine
+module p_MLQMC_GNA_Routine
 
 using DelimitedFiles
 using FiniteElementDiffusion
@@ -52,8 +52,8 @@ corr_len=0.3
 smoothness=4.0
 is_analyse=false
 index_set=ML()
-isHigerOrderRefinement=false
-isElementRefinement=true
+isHigerOrderRefinement=true
+isElementRefinement=false
 correlateOnlyDiffs=false
 is_multiple_qoi=false
 ###############
@@ -69,6 +69,7 @@ indices = get_max_index_set(index_set, MaxLevel)
 
 Elements=Dict()
 Nodes=Dict()
+RandomFieldEvaluationPoints=Dict()
 	if(isa(index_set,SL)||isa(index_set,ML))
 
   		if(isHigerOrderRefinement==false)
@@ -138,9 +139,9 @@ Nodes=Dict()
 			Node=Node[:,2:3]
 			Nodes[id]=Node
 			Center=compute_centers(Node,Element)
-			Centers[id]=Center
+			RandomFieldEvaluationPoints[id]=Center
    #Nodes[id]=[Centers[id];Nodes[id]] ###############################################################################################use centers to generate
-			writedlm(Handle_PathElementCenters,Center)
+			writedlm(Handle_PathElementCenters,RandomFieldEvaluationPoints)
 			close(Handle_PathElementCenters)
 			close(Handle_Nodes)
 			println("h-ref")
@@ -150,12 +151,19 @@ Nodes=Dict()
 			Nodes_elements=Nodes_elements[:,2:3]
 
 			if(correlateOnlyDiffs==false)
-				PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",Access)),".txt")
-				Handle_Nodes=open(PathNodes)
-				Node=readdlm(Handle_Nodes);
-				close(Handle_Nodes)
+				PathRandomFieldEvaluationPoints=string(string(folder_with_elements,string("/",type,"_refinement/GaussPoints_L",Access)),".txt")
+				Handle_RandomFieldEvaluationPoints=open(PathRandomFieldEvaluationPoints)
+				RandomFieldEvaluationPoint=readdlm(Handle_RandomFieldEvaluationPoints);
+				close(Handle_RandomFieldEvaluationPoints)
+				RandomFieldEvaluationPoint=RandomFieldEvaluationPoint[:,2:3]
+				RandomFieldEvaluationPoints[id]=RandomFieldEvaluationPoint
+
+				PathNodes=string(string(folder_with_elements,string("/",type,"_refinement/Nodes_L",Access)),".txt")
+	 			Handle_Nodes=open(PathNodes)
+	 			Node=readdlm(Handle_Nodes);
 				Node=Node[:,2:3]
 				Nodes[id]=Node
+
 			end
 			println("p-ref and hp-ref")
 		end
@@ -204,7 +212,7 @@ Nodes=Dict()
 		for index in indices
 			println(index)
 			Random.seed!(1234)
-			grfs[index] = GaussianRandomField(cov,KarhunenLoeve(nterms),Nodes[index],Elements[index],quad=GaussLegendre())
+			grfs[index] = GaussianRandomField(cov,KarhunenLoeve(nterms),RandomFieldEvaluationPoints[index],Elements[index],quad=GaussLegendre())
 			println(grfs[index])
 		end
 
@@ -287,7 +295,7 @@ Nodes=Dict()
 	timenow = Dates.format(timenow, "dd-mm-yyyy-T:HH:MM:SS")
 	name = string(name,timenow)
 	#nb_of_qoi = is_multiple_qoi ? Int(Lx/he*2^(max_level-1)+1) : 1
-	sample_function = correlateOnlyDiffs ? (index, ξ) -> Diffusion_cslo(index, ξ, grfs,Nodes,Elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs) : (index, ξ) -> Diffusion(index, ξ, grfs,Nodes,Elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs,Centers)
+	sample_function = correlateOnlyDiffs ? (index, ξ) -> Diffusion_cslo(index, ξ, grfs,Nodes,Elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs) : (index, ξ) -> Diffusion(index, ξ, grfs,Nodes,Elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs,RandomFieldEvaluationPoints)
 	isa(index_set,SL) ? println("All samples taken on level ", max_level) : println()
 
 
@@ -338,7 +346,7 @@ end
 
 
 
-function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool,Centers::Dict)
+function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool,RandomFieldEvaluationPoints::Dict)
 
 	StepChange=0
 	if(length(increment)==length(index))
@@ -347,12 +355,12 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 
 	Nodes_Fine=Nodes[index]
 	Elements_Fine=Elements[index]
-	Centers_Fine=Centers[index]
+	RandomFieldEvaluationPoints_Fine=RandomFieldEvaluationPoints[index]
 	Zf = GaussianRandomFields.sample(grf[index],xi=ξ) # compute GRF
 
 
 	itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Fine', Zf);
-	Zf=evaluate(itp, Centers_Fine')
+	Zf=evaluate(itp, RandomFieldEvaluationPoints_Fine')
 
 	Zf=exp.(Zf)
 
@@ -375,16 +383,16 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 			index_1=key
 			Nodes_Coarse=Nodes[index_1]
 			Elements_Coarse=Elements[index_1]
-			Centers_Coarse=Centers[index_1]
+			RandomFieldEvaluationPoints_Coarse=RandomFieldEvaluationPoints[index_1]
 
 			if(grf[index_1].data.eigenfunc[1,1]==grf[index].data.eigenfunc[1,1])
 				Zc=GaussianRandomFields.sample(grf[index_1],xi=ξ)
 				itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Coarse', Zc);
-				Zc=evaluate(itp, Centers_Coarse')
+				Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
 				Zc=exp.(Zc)
 			else
-				itp = ScatteredInterpolation.interpolate(NearestNeighbor(), Centers_Fine', Zf);
-				Zc=evaluate(itp, Centers_Coarse')
+				itp = ScatteredInterpolation.interpolate(NearestNeighbor(), RandomFieldEvaluationPoints_Fine', Zf);
+				Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
 				Zc=vec(Zc)
 			end
 

@@ -1,5 +1,5 @@
 
-module h_MLQMC_Routine
+module p_MLQMC_LNA_Routine
 
 using DelimitedFiles
 using FiniteElementDiffusion
