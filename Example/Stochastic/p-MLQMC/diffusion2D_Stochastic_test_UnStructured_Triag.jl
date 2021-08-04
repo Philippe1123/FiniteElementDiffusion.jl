@@ -47,7 +47,7 @@ NumberOfGaussPointsPerElement=Int64(size(RandomFieldEvaluationPoint,1)/size(Elem
 println(Nodes2)
 println(Elements)
 
-Kernel = GaussianRandomFields.Matern(0.3,2.0,σ=1.0,p=2)
+Kernel = GaussianRandomFields.Matern(0.03,2.0,σ=1.0,p=2)
 cov = CovarianceFunction(2,Kernel)
 grf = GaussianRandomField(cov,KarhunenLoeve(100),RandomFieldEvaluationPoint,Elements2[:,1:3],quad=GaussLegendre())
 Zf=sample(grf)

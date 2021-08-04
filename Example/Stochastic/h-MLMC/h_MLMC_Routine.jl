@@ -41,12 +41,12 @@ function Main()
 
 
 nshifts=8
-nb_of_warm_up_samples=2
+nb_of_warm_up_samples=10
 max_index_set_param=11 #8
 numberoftol=60
 NQoI=1
 is_qmc=false
-MaxLevel=2
+MaxLevel=3
 nterms=400
 corr_len=0.3
 smoothness=4.0
@@ -359,7 +359,7 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 
 
 	ElemType="TwoD_Triag_Order1"
-	QuadPoints=3
+	QuadPoints=16
 	MaterialParam=Dict()
 	NumberOfElements=size(Elements_Fine,1)
 	for id=1:NumberOfElements MaterialParam[id]=Zf[id] end

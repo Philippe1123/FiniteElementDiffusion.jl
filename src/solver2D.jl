@@ -276,6 +276,19 @@ for ii in ElemNodes
                 end
             end
         else########################triag
+
+            if(haskey(solverparam,:GaussPointOrdering))
+
+
+                GaussPointOrdering=solverparam.GaussPointOrdering
+                x=x[GaussPointOrdering,:]
+                y=y[GaussPointOrdering,:]
+                H1=H1[GaussPointOrdering,:]
+                H2=H2[GaussPointOrdering,:]
+
+            end
+
+
             itr=1
             for w=1:solverparam.Qpt
 

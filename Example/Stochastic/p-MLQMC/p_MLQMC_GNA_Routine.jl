@@ -37,7 +37,19 @@ get_max_index_set(::Union{AD, U}, args) = get_index_set(get_arg(args, :max_searc
 
 function Main()
 ###########Input
+OrderOfElementsPerLevel=Dict()
+OrderOfElementsPerLevel[Level(0)]="TwoD_Triag_Order1"
+OrderOfElementsPerLevel[Level(1)]="TwoD_Triag_Order2"
+OrderOfElementsPerLevel[Level(2)]="TwoD_Triag_Order3"
+OrderOfElementsPerLevel[Level(3)]="TwoD_Triag_Order4"
+OrderOfElementsPerLevel[Level(4)]="TwoD_Triag_Order5"
 
+GaussPointOrdering=Dict()
+GaussPointOrdering[Level(0)]=[7,16,10,15,2,6,3,9,11,1,13,4,12,8,14,5]
+GaussPointOrdering[Level(1)]=[13,17,10,19,5,16,6,9,12,1,18,7,14,8,15,11,2,3,4]
+GaussPointOrdering[Level(2)]=[4,26,7,22,14,25,15,6,3,1,21,16,17,5,18,2,8,9,10,28,20,19,13,12,27,11,23,24]
+GaussPointOrdering[Level(3)]=[4,21,13,30,5,20,6,12,3,1,31,7,28,34,29,2,14,15,16,24,27,32,10,9,25,8,22,23,33,17,36,37,18,26,35,11,19]
+GaussPointOrdering[Level(4)]=[9,4,22,34,19,5,40,23,8,45,36,41,52,53,51,61,10,43,42,27,2,11,29,30,26,44,57,56,20,1,31,21,46,32,47,48,12,7,18,16,13,25,37,28,14,6,38,15,17,24,35,39,50,33,3,55,49,54,58,59,60]
 
 
 nshifts=8
@@ -46,9 +58,9 @@ max_index_set_param=11 #8
 numberoftol=60
 NQoI=1
 is_qmc=true
-MaxLevel=2
-nterms=400
-corr_len=0.3
+MaxLevel=4
+nterms=50
+corr_len=0.03
 smoothness=4.0
 is_analyse=false
 index_set=ML()
@@ -66,7 +78,7 @@ indices = get_max_index_set(index_set, MaxLevel)
 
 
 
-
+Elements_Full=Dict()
 Elements=Dict()
 Nodes=Dict()
 RandomFieldEvaluationPoints=Dict()
@@ -124,10 +136,10 @@ RandomFieldEvaluationPoints=Dict()
 
 		PathElement=string(string(folder_with_elements,string("/",type,"_refinement/Elements_L",Access)),".txt")
 		Handle_Elements=open(PathElement)
-		Element=readdlm(Handle_Elements,Int);
- 		Element=Element[:,5:7]
+		Element_All=readdlm(Handle_Elements,Int);
+ 		Element=Element_All[:,5:7]
  		Elements[id]=Element
-
+        Elements_Full[id]=Element_All[:,5:end]
 
 
 		if((isa(index_set,SL)||isa(index_set,ML))&&isHigerOrderRefinement==false)
@@ -295,7 +307,7 @@ RandomFieldEvaluationPoints=Dict()
 	timenow = Dates.format(timenow, "dd-mm-yyyy-T:HH:MM:SS")
 	name = string(name,timenow)
 	#nb_of_qoi = is_multiple_qoi ? Int(Lx/he*2^(max_level-1)+1) : 1
-	sample_function = correlateOnlyDiffs ? (index, ξ) -> Diffusion_cslo(index, ξ, grfs,Nodes,Elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs) : (index, ξ) -> Diffusion(index, ξ, grfs,Nodes,Elements,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs,RandomFieldEvaluationPoints)
+	sample_function = correlateOnlyDiffs ? (index, ξ) -> Diffusion_cslo(index, ξ, grfs,Nodes,Elements_Full,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs,OrderOfElementsPerLevel,GaussPointOrdering) : (index, ξ) -> Diffusion(index, ξ, grfs,Nodes,Elements_Full,isHigerOrderRefinement,isElementRefinement,increment,correlateOnlyDiffs,RandomFieldEvaluationPoints,OrderOfElementsPerLevel,GaussPointOrdering)
 	isa(index_set,SL) ? println("All samples taken on level ", max_level) : println()
 
 
@@ -346,7 +358,7 @@ end
 
 
 
-function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool,RandomFieldEvaluationPoints::Dict)
+function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes::Dict, Elements::Dict,isHigerOrderRefinement::Bool,isElementRefinement::Bool,increment::Int64,correlateOnlyDiffs::Bool,RandomFieldEvaluationPoints::Dict,OrderOfElementsPerLevel::Dict,GaussPointOrdering::Dict)
 
 	StepChange=0
 	if(length(increment)==length(index))
@@ -357,29 +369,39 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 	Elements_Fine=Elements[index]
 	RandomFieldEvaluationPoints_Fine=RandomFieldEvaluationPoints[index]
 	Zf = GaussianRandomFields.sample(grf[index],xi=ξ) # compute GRF
-
-
-	itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Fine', Zf);
-	Zf=evaluate(itp, RandomFieldEvaluationPoints_Fine')
-
 	Zf=exp.(Zf)
 
-
-
-	ElemType="TwoD_Triag_Order1"
-	QuadPoints=3
-	MaterialParam=Dict()
+	NumberOfGaussPointsPerElement_Fine=Int64(size(RandomFieldEvaluationPoints_Fine,1)/size(Elements_Fine,1))
 	NumberOfElements=size(Elements_Fine,1)
-	for id=1:NumberOfElements MaterialParam[id]=Zf[id] end
-	solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
+
+
+	#itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Fine', Zf);
+	#Zf=evaluate(itp, RandomFieldEvaluationPoints_Fine')
+
+
+
+
+	ElemType=OrderOfElementsPerLevel[index]
+	QuadPoints=NumberOfGaussPointsPerElement_Fine
+	MaterialParam=Dict()
+
+	MatrixForm=reshape(Zf,NumberOfGaussPointsPerElement_Fine,NumberOfElements)'
+	for id=1:NumberOfElements
+	MaterialParam[id]=MatrixForm[id,1:end]
+	end
+
+
+
+	solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]),GaussPointOrdering=GaussPointOrdering[index])
 	Qf=solver2D.main(Nodes_Fine,Elements_Fine,MaterialParam,solverparam)
+
+
 	itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Fine', Qf);
 	Qf = evaluate(itp,[0.5 0.5]')
 
     dQ = Qf
 	if(increment==0)
 		for (key,value) in diff(index)
-
 			index_1=key
 			Nodes_Coarse=Nodes[index_1]
 			Elements_Coarse=Elements[index_1]
@@ -387,8 +409,8 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 
 			if(grf[index_1].data.eigenfunc[1,1]==grf[index].data.eigenfunc[1,1])
 				Zc=GaussianRandomFields.sample(grf[index_1],xi=ξ)
-				itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Coarse', Zc);
-				Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
+#				itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Coarse', Zc);
+#				Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
 				Zc=exp.(Zc)
 			else
 				itp = ScatteredInterpolation.interpolate(NearestNeighbor(), RandomFieldEvaluationPoints_Fine', Zf);
@@ -396,11 +418,23 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 				Zc=vec(Zc)
 			end
 
-			#Qc = Slope_Sample(Zc,MatlabSampler,folder,index_1,true,isHigerOrderRefinement,isElementRefinement,StepChange)
-			MaterialParam=Dict()
+
+			NumberOfGaussPointsPerElement_Coarse=Int64(size(RandomFieldEvaluationPoints_Coarse,1)/size(Elements_Coarse,1))
 			NumberOfElements=size(Elements_Coarse,1)
-			for id=1:NumberOfElements MaterialParam[id]=Zc[id] end
-			solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
+
+
+			ElemType=OrderOfElementsPerLevel[index_1]
+			QuadPoints=NumberOfGaussPointsPerElement_Coarse
+			MaterialParam=Dict()
+
+#			for id=1:NumberOfElements MaterialParam[id]=Zc[id] end
+
+			MatrixForm=reshape(Zc,NumberOfGaussPointsPerElement_Coarse,NumberOfElements)'
+			for id=1:NumberOfElements
+				MaterialParam[id]=MatrixForm[id,1:end]
+			end
+
+			solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]),GaussPointOrdering=GaussPointOrdering[index_1])
 			Qc=solver2D.main(Nodes_Coarse,Elements_Coarse,MaterialParam,solverparam)
 
 			itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Coarse', Qc);
