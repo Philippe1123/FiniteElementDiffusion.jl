@@ -59,9 +59,9 @@ numberoftol=60
 NQoI=1
 is_qmc=true
 MaxLevel=4
-nterms=50
-corr_len=0.03
-smoothness=4.0
+nterms=300
+corr_len=0.01
+smoothness=2.0
 is_analyse=false
 index_set=ML()
 isHigerOrderRefinement=true
@@ -334,7 +334,7 @@ RandomFieldEvaluationPoints=Dict()
    distributions,
    name = name, # estimator name
    folder = folder, # for report
-   do_mse_splitting=true,
+   do_mse_splitting=false,
  #  min_splitting=0.01,
 #   max_splitting=0.1,
    nb_of_shifts=nshifts,
@@ -407,16 +407,16 @@ function Diffusion(index::Index, ξ::Vector{T} where {T<:Real}, grf::Dict, Nodes
 			Elements_Coarse=Elements[index_1]
 			RandomFieldEvaluationPoints_Coarse=RandomFieldEvaluationPoints[index_1]
 
-			if(grf[index_1].data.eigenfunc[1,1]==grf[index].data.eigenfunc[1,1])
+			#if(grf[index_1].data.eigenfunc[1,1]==grf[index].data.eigenfunc[1,1])
 				Zc=GaussianRandomFields.sample(grf[index_1],xi=ξ)
 #				itp = ScatteredInterpolation.interpolate(Polyharmonic(), Nodes_Coarse', Zc);
 #				Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
 				Zc=exp.(Zc)
-			else
-				itp = ScatteredInterpolation.interpolate(NearestNeighbor(), RandomFieldEvaluationPoints_Fine', Zf);
-				Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
-				Zc=vec(Zc)
-			end
+			#else
+			#	itp = ScatteredInterpolation.interpolate(NearestNeighbor(), RandomFieldEvaluationPoints_Fine', Zf);
+			#	Zc=evaluate(itp, RandomFieldEvaluationPoints_Coarse')
+			#	Zc=vec(Zc)
+			#end
 
 
 			NumberOfGaussPointsPerElement_Coarse=Int64(size(RandomFieldEvaluationPoints_Coarse,1)/size(Elements_Coarse,1))
