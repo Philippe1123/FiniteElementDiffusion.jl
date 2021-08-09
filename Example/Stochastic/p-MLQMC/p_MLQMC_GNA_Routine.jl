@@ -348,8 +348,8 @@ RandomFieldEvaluationPoints=Dict()
    )
 
 
-   history = run(estimator,2.0e-5)
-   #history = run(estimator,2.0e-6)
+   #history = run(estimator,2.0e-5)
+   history = run(estimator,2.0e-6)
 
 
 end
