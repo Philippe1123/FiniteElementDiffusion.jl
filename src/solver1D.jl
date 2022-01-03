@@ -170,6 +170,61 @@ end
 return K_el
 end
 
+function computeElementStiffnessMatrices(solverparam::NamedTuple,Nodes::Array,ElemNodes::Array,D::Array)
+
+    K_el=zeros(length(Nodes),length(Nodes))
+    
+    modl=getfield(Main,Symbol(solverparam.elemtype))
+    x,H=gauss(solverparam.Qpt)
+    #println(ElemNodes)
+    for ii in ElemNodes
+        for jj in ElemNodes
+            #println(ii)
+            #println(jj)
+    
+            i=mod(ii-1,solverparam.Order+1)+1
+            j=mod(jj-1,solverparam.Order+1)+1
+            #println(i)
+            #println(j)
+    itr = 1
+    for v=1:solverparam.Qpt
+    phi,dphi=modl.evaluate(x[v])
+    Jac=transpose(Nodes)*dphi
+    #println(transpose(Nodes))
+    #println(dphi)
+    Jac=Jac[1]
+    #println(Jac)
+    #println(Nodes)
+    #println(dphi[1])
+    #println(dphi[2])
+    #println(H[v])
+    #println(Jac)
+    #println(v)
+    #println(x[v])
+    #println(dphi[i])
+    #println(dphi[j])
+    #println(H[v])
+    
+    
+    
+    a=Nodes[1,1]
+    b=Nodes[2,1]
+    #println("ok")
+    function fun(in) return (in*(b-a)/2+(a+b)/2)end
+    #println(Jac)
+    #println(solverparam.Nelem)
+    
+    K_el[i,j]=K_el[i,j]+dphi[i]*1/Jac*dphi[j]*1/Jac*H[v]*Jac*D[itr]
+    end
+    itr = itr +1
+    #println("-----")
+    end
+    end
+    
+    #println(K_el)
+    return K_el
+    end
+
 
 function computerighthandside(forcingTerm::Array,solverparam::NamedTuple,Nodes::Array,Elements::Matrix,PositionVector::Matrix)
     modl=getfield(Main,Symbol(solverparam.elemtype))
