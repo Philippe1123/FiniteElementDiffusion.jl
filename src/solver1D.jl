@@ -27,7 +27,10 @@ K=assembly(PositionMatrix,K_el_vector_form)
 #println(K_el_Dict)
 
 
-forcingterm=vec(ones(length(Nodes),1))
+#forcingterm=vec(ones(length(Nodes),1)).*Nodes
+forcingterm = sin.(11*pi*Nodes)
+
+
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
 #println(f)
 #f=vec(ones(size(K,2),1))

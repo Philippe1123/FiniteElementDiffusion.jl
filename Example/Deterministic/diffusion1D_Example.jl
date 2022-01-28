@@ -18,9 +18,9 @@ DiffusionCoefficient=1.0
 QuadPoints=6
 
 #Order 1
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_1_5.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_1_767.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_1_5.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_1_767.txt"))
 Nodes1=Nodes[:,2]#only retain x component
 ElemType="OneD_Order1"
 NumberOfElements=size(Elements,1)
@@ -30,9 +30,9 @@ u1=solver1D.main(Nodes1,Elements,MaterialParam,solverparam)
 
 
 #Order 2
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_2_5.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_2_767.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_2_5.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_2_767.txt"))
 Nodes2=Nodes[:,2]#only retain x component
 ElemType="OneD_Order2"
 NumberOfElements=size(Elements,1)
@@ -42,9 +42,9 @@ u2=solver1D.main(Nodes2,Elements,MaterialParam,solverparam)
 
 
 #Order 3
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_3_5.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_3_767.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_3_5.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_3_767.txt"))
 Nodes3=Nodes[:,2]#only retain x component
 ElemType="OneD_Order3"
 NumberOfElements=size(Elements,1)
@@ -53,9 +53,9 @@ solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=p
 u3=solver1D.main(Nodes3,Elements,MaterialParam,solverparam)
 
 #Order 4
-Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_4_5.txt")))
+Elements=Int64.(readdlm(joinpath(locationOfMesh,"1D/Elements_4_767.txt")))
 Elements=Elements[:,5:end]
-Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_4_5.txt"))
+Nodes=readdlm(joinpath(locationOfMesh,"1D/Nodes_4_767.txt"))
 Nodes4=Nodes[:,2]#only retain x component
 ElemType="OneD_Order4"
 NumberOfElements=size(Elements,1)
@@ -96,8 +96,8 @@ plot(Nodes1[2:end-1],u1,"-*")
 plot(Nodes2[2:end-1],u2,"-*")
 plot(Nodes3[2:end-1],u3,"-*")
 plot(Nodes4[2:end-1],u4,"-*")
-plot(Nodes2H[2:end-1],u2H,"-*")
-plot(Nodes3H[2:end-1],u3H,"-*")
+#plot(Nodes2H[2:end-1],u2H,"-*")
+#plot(Nodes3H[2:end-1],u3H,"-*")
 
 legend(("Order1","Order2","Order3","Order4"))
 println(minimum(u1))
@@ -111,6 +111,14 @@ println(u2)
 println(u4)
 println(u2H)
 println(u3H)
+
+sol=abs.([minimum(u1),minimum(u2),minimum(u3),minimum(u4)] .- -0.1250)./0.125
+nod=[length(u1),length(u2),length(u3),length(u4)]
+
+figure()
+
+loglog(nod,sol)
+
 
 end
 

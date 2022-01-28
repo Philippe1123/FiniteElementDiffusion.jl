@@ -14,7 +14,7 @@ println(@__DIR__)
 
 
 MaterialParam=Dict()
-DiffusionCoefficient=10.0
+DiffusionCoefficient=1.0
 QuadPoints=3
 
 #Order 1
@@ -77,13 +77,16 @@ for id=1:NumberOfElements MaterialParam[id]=DiffusionCoefficient end
 solverparam=(elemtype =ElemType, Qpt=QuadPoints, Nelem=NumberOfElements, Order=parse(Int,ElemType[end]))
 u3=solver2D.main(Nodes3,Elements,MaterialParam,solverparam)
 
-println(maximum(u1))
-println(maximum(u2))
-println(maximum(u2_bis))
+println(minimum(u1))
+println(minimum(u2))
+println(minimum(u2_bis))
 
-println(maximum(u3))
+println(minimum(u3))
 
+println(u3)
 
+figure()
+surf(Nodes1[:,1],Nodes1[:,2],u1)
 
 
 #println(u)

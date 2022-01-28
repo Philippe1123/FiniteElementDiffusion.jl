@@ -28,7 +28,10 @@ K=applyBoundaryConditions(K,Nodes)
 #println(K_el_Dict)
 
 
-forcingterm=vec(ones(size(Nodes,1),1))
+#forcingterm=vec(ones(size(Nodes,1),1))
+
+
+forcingterm=sin.(2*pi.*Nodes[:,1]) .* sin.(2*pi.*Nodes[:,2])
 f=computerighthandside(forcingterm,solverparam,Nodes,Elements,PositionVector)
 f=applyBoundaryConditions(f,Nodes)
 #Third solve

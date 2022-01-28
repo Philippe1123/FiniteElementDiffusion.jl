@@ -14,7 +14,7 @@ println(@__DIR__)
 
 
 MaterialParam=Dict()
-DiffusionCoefficient=10.0
+DiffusionCoefficient=1.0
 QuadPoints=19
 
 #Order 1
@@ -92,7 +92,7 @@ println(minimum(u3))
 println(minimum(u4))
 
 println(@__DIR__())
-
+"""
 out1=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/1.txt"),"w")
  writedlm(out1,[Nodes1 u1])
  close(out1)
@@ -108,6 +108,7 @@ out1=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/1.txt"),"w")
    out4=open(string(@__DIR__(),"/out/2D/Unstructured/Triag/4.txt"),"w")
     writedlm(out4,[Nodes4 u4])
     close(out4)
+"""
 #println(maximum(u4))
 
 #println(size(Nodes1))

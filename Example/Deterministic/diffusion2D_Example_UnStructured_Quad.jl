@@ -14,7 +14,7 @@ println(@__DIR__)
 
 
 MaterialParam=Dict()
-DiffusionCoefficient=10.0
+DiffusionCoefficient=1.0
 QuadPoints=10
 
 #Order 1
